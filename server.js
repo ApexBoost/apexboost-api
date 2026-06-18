@@ -22,7 +22,13 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, 'public')))
 
 // ── Banco de dados ─────────────────────────────────────────
-const db = new Database(process.env.DB_PATH || path.join(__dirname, 'licenses.db'))
+// Criar pasta do banco se não existir (necessário no Railway)
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'licenses.db')
+const dbDir  = require('path').dirname(dbPath)
+if (!require('fs').existsSync(dbDir)) {
+  require('fs').mkdirSync(dbDir, { recursive: true })
+}
+const db = new Database(dbPath)
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS licenses (
