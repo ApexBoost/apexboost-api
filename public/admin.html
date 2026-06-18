@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ApexBoost — Painel de Licenças</title>
+<style>
+:root {
+  --bg: #0C0E13; --bg2: #12151C; --bg3: #1E2535;
+  --border: rgba(255,255,255,.08); --blue: #3B82F6;
+  --green: #10B981; --red: #EF4444; --yellow: #F59E0B;
+  --text: #E8EAF0; --muted: #8892A4; --dim: #3D4558;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+.header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
+.logo { font-size: 18px; font-weight: 700; letter-spacing: 1.5px; }
+.logo span { color: var(--blue); }
+.header-sub { font-size: 12px; color: var(--muted); font-family: monospace; }
+
+#auth-screen, #main-screen { padding: 40px 24px; max-width: 1100px; margin: 0 auto; }
+.auth-card { max-width: 380px; margin: 60px auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+.auth-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+
+input, select { width: 100%; background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 6px; font-size: 14px; outline: none; font-family: inherit; }
+input:focus { border-color: var(--blue); }
+input::placeholder { color: var(--dim); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .12s; white-space: nowrap; }
+.btn:hover { background: var(--bg3); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { background: #2563EB; }
+.btn.danger { border-color: rgba(239,68,68,.4); color: var(--red); }
+.btn.danger:hover { background: rgba(239,68,68,.08); }
+.btn.success { border-color: rgba(16,185,129,.4); color: var(--green); }
+.btn.sm { padding: 5px 10px; font-size: 12px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.stat-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-family: monospace; }
+.stat-val { font-size: 28px; font-weight: 700; }
+.stat-val.blue { color: var(--blue); }
+.stat-val.green { color: var(--green); }
+.stat-val.yellow { color: var(--yellow); }
+.stat-val.red { color: var(--red); }
+
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+.card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.card-title { font-size: 14px; font-weight: 600; flex: 1; }
+.card-body { padding: 16px 18px; }
+
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+label { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; }
+.field { flex: 1; min-width: 150px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { padding: 10px 12px; text-align: left; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--border); font-weight: 500; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: monospace; }
+.badge.unused  { background: rgba(59,130,246,.1); color: var(--blue); border: 1px solid rgba(59,130,246,.2); }
+.badge.activated { background: rgba(16,185,129,.1); color: var(--green); border: 1px solid rgba(16,185,129,.2); }
+.badge.revoked { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.2); }
+
+.key-text { font-family: monospace; font-size: 13px; color: var(--text); letter-spacing: .5px; }
+.key-new { font-family: monospace; font-size: 14px; padding: 10px 14px; background: var(--bg3); border: 1px solid rgba(16,185,129,.3); border-radius: 6px; color: var(--green); letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--bg3); border: 1px solid var(--border); border-left: 3px solid var(--blue); border-radius: 6px; padding: 10px 16px; font-size: 13px; opacity: 0; transform: translateY(6px); transition: all .2s; pointer-events: none; z-index: 999; font-family: monospace; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.g { border-left-color: var(--green); }
+.toast.r { border-left-color: var(--red); }
+
+.filter-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.filter-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; transition: all .12s; }
+.filter-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+.tabs { display: flex; gap: 2px; background: var(--bg3); border-radius: 6px; padding: 3px; margin-bottom: 20px; }
+.tab { padding: 7px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all .12s; }
+.tab.active { background: var(--bg2); color: var(--text); }
+
+.empty { text-align: center; padding: 32px; color: var(--dim); font-family: monospace; font-size: 13px; }
+
+#main-screen { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">APEX<span>BOOST</span></div>
+  <div class="header-sub">// Painel de Licenças — Admin</div>
+  <button class="btn sm" style="margin-left:auto" onclick="logout()">Sair</button>
+</div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-title">🔐 Acesso ao Painel</div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Senha de administrador</label>
+      <input type="password" id="auth-input" placeholder="Digite a senha" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+    <button class="btn primary" style="width:100%;justify-content:center" onclick="doAuth()">Entrar</button>
+    <div id="auth-error" style="color:var(--red);font-size:12px;text-align:center;margin-top:10px;display:none">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-screen">
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total de chaves</div><div class="stat-val blue" id="st-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Disponíveis</div><div class="stat-val yellow" id="st-unused">—</div></div>
+    <div class="stat-card"><div class="stat-label">Ativadas</div><div class="stat-val green" id="st-activated">—</div></div>
+    <div class="stat-card"><div class="stat-label">Revogadas</div><div class="stat-val red" id="st-revoked">—</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('keys')">Chaves</button>
+    <button class="tab" onclick="showTab('generate')">Gerar Chaves</button>
+    <button class="tab" onclick="showTab('logs')">Histórico</button>
+  </div>
+
+  <!-- TAB: CHAVES -->
+  <div id="tab-keys">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Chaves de Licença</div>
+        <div class="filter-row" style="margin:0">
+          <button class="filter-btn active" onclick="filterKeys('all',this)">Todas</button>
+          <button class="filter-btn" onclick="filterKeys('unused',this)">Disponíveis</button>
+          <button class="filter-btn" onclick="filterKeys('activated',this)">Ativadas</button>
+          <button class="filter-btn" onclick="filterKeys('revoked',this)">Revogadas</button>
+        </div>
+        <button class="btn sm" onclick="loadKeys()">↻ Atualizar</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Chave</th>
+              <th>Status</th>
+              <th>Gerada em</th>
+              <th>Ativada em</th>
+              <th>IP</th>
+              <th>Nota</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="keys-tbody">
+            <tr><td colspan="7" class="empty">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: GERAR -->
+  <div id="tab-generate" style="display:none">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Gerar nova(s) chave(s)</div></div>
+      <div class="card-body">
+        <div class="row" style="margin-bottom:16px">
+          <div class="field">
+            <label>Quantidade</label>
+            <input type="number" id="gen-qty" value="1" min="1" max="50">
+          </div>
+          <div class="field">
+            <label>Nota (opcional — ex: "Cliente João")</label>
+            <input type="text" id="gen-note" placeholder="identificação opcional">
+          </div>
+          <button class="btn primary" onclick="generateKeys()" style="margin-top:18px">⚡ Gerar</button>
+        </div>
+        <div id="gen-result"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Como entregar a chave ao cliente</div></div>
+      <div class="card-body" style="color:var(--muted);font-size:13px;line-height:1.8">
+        <p>1. Clique em <strong style="color:var(--text)">Gerar</strong> para criar uma nova chave</p>
+        <p>2. Copie a chave gerada (formato: <span style="font-family:monospace;color:var(--blue)">APEX-XXXX-XXXX-XXXX-XXXX</span>)</p>
+        <p>3. Envie para o cliente pelo WhatsApp, email ou área de membros da Kiwify</p>
+        <p>4. O cliente abre o ApexBoost e digita a chave na tela de ativação</p>
+        <p>5. A chave fica vinculada ao computador do cliente — não pode ser reutilizada</p>
+        <br>
+        <p style="color:var(--yellow)">⚠ Cada chave é de uso único. Se o cliente formatar o PC, precisará comprar uma nova licença.</p>
+        <p style="color:var(--muted);margin-top:8px">Exceção: se quiser resetar manualmente (ex: troca de PC por garantia), use o botão "Resetar" na aba Chaves.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: LOGS -->
+  <div id="tab-logs" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Histórico de ativações</div>
+        <button class="btn sm" onclick="loadLogs()">↻ Atualizar</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th>Data/hora</th><th>Chave</th><th>Ação</th><th>IP</th><th>Resultado</th></tr>
+          </thead>
+          <tbody id="logs-tbody">
+            <tr><td colspan="5" class="empty">Clique em Atualizar</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let adminSecret = ''
+let currentFilter = 'all'
+let allKeys = []
+
+async function api(method, path, body) {
+  const r = await fetch(path, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+    body: body ? JSON.stringify(body) : undefined
+  })
+  return r.json()
+}
+
+function toast(msg, type='') {
+  const el = document.getElementById('toast')
+  el.textContent = msg; el.className = 'toast show ' + type
+  clearTimeout(window._tt)
+  window._tt = setTimeout(() => el.className = 'toast', 3000)
+}
+
+function showTab(tab) {
+  ['keys','generate','logs'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none'
+  })
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['keys','generate','logs'][i] === tab)
+  })
+  if (tab === 'keys') loadKeys()
+  if (tab === 'logs') loadLogs()
+}
+
+async function doAuth() {
+  const pwd = document.getElementById('auth-input').value
+  if (!pwd) return
+  adminSecret = pwd
+  const r = await fetch('/admin/keys?limit=1', { headers: { 'x-admin-secret': pwd } })
+  if (r.status === 401) {
+    document.getElementById('auth-error').style.display = 'block'
+    adminSecret = ''
+    return
+  }
+  document.getElementById('auth-screen').style.display = 'none'
+  document.getElementById('main-screen').style.display = 'block'
+  loadKeys()
+}
+
+function logout() {
+  adminSecret = ''
+  document.getElementById('auth-screen').style.display = 'block'
+  document.getElementById('main-screen').style.display = 'none'
+  document.getElementById('auth-input').value = ''
+}
+
+async function loadKeys() {
+  const r = await api('GET', '/admin/keys?limit=500')
+  if (!r.success) return
+  allKeys = r.keys
+  document.getElementById('st-total').textContent     = r.stats.total
+  document.getElementById('st-unused').textContent    = r.stats.unused
+  document.getElementById('st-activated').textContent = r.stats.activated
+  document.getElementById('st-revoked').textContent   = r.stats.revoked
+  renderKeys(currentFilter)
+}
+
+function filterKeys(filter, btn) {
+  currentFilter = filter
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+  if (btn) btn.classList.add('active')
+  renderKeys(filter)
+}
+
+function renderKeys(filter) {
+  const keys = filter === 'all' ? allKeys : allKeys.filter(k => k.status === filter)
+  const tbody = document.getElementById('keys-tbody')
+  if (!keys.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma chave encontrada</td></tr>'; return }
+  tbody.innerHTML = keys.map(k => `
+    <tr>
+      <td><span class="key-text">${k.key}</span>
+        <button onclick="copyKey('${k.key}')" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-left:6px;font-size:11px">⎘</button>
+      </td>
+      <td><span class="badge ${k.status}">${k.status === 'unused' ? 'Disponível' : k.status === 'activated' ? 'Ativada' : 'Revogada'}</span></td>
+      <td style="color:var(--muted);font-size:12px">${k.created_at?.slice(0,16) || '—'}</td>
+      <td style="color:var(--muted);font-size:12px">${k.activated_at?.slice(0,16) || '—'}</td>
+      <td style="color:var(--dim);font-size:11px;font-family:monospace">${k.ip || '—'}</td>
+      <td style="color:var(--dim);font-size:12px">${k.note || '—'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          ${k.status !== 'revoked' ? `<button class="btn sm danger" onclick="revokeKey('${k.key}')">Revogar</button>` : ''}
+          ${k.status !== 'unused'  ? `<button class="btn sm" onclick="resetKey('${k.key}')">Resetar</button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('')
+}
+
+async function generateKeys() {
+  const qty  = parseInt(document.getElementById('gen-qty').value) || 1
+  const note = document.getElementById('gen-note').value
+  const r = await api('POST', '/admin/generate', { quantity: qty, note, adminSecret })
+  if (!r.success) { toast('Erro ao gerar chaves', 'r'); return }
+
+  const div = document.getElementById('gen-result')
+  div.innerHTML = `<div style="margin-bottom:8px;font-size:13px;color:var(--green)">✓ ${r.keys.length} chave(s) gerada(s):</div>`
+    + r.keys.map(k => `
+      <div class="key-new">
+        <span>${k}</span>
+        <button onclick="copyKey('${k}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px">⎘ Copiar</button>
+      </div>`).join('')
+
+  toast(`✓ ${r.keys.length} chave(s) gerada(s)`, 'g')
+  loadKeys()
+}
+
+async function revokeKey(key) {
+  if (!confirm(`Revogar a chave ${key}?\n\nO cliente não conseguirá mais usar o ApexBoost com essa chave.`)) return
+  const r = await api('POST', '/admin/revoke', { key, adminSecret })
+  if (r.success) { toast('Chave revogada', 'g'); loadKeys() }
+  else toast('Erro: ' + r.error, 'r')
+}
+
+async function resetKey(key) {
+  if (!confirm(`Resetar a chave ${key}?\n\nEla ficará disponível para ser ativada novamente em outro PC.`)) return
+  const r = await api('POST', '/admin/reset', { key, adminSecret })
+  if (r.success) { toast('Chave resetada — pode ser ativada novamente', 'g'); loadKeys() }
+  else toast('Erro: ' + r.error, 'r')
+}
+
+async function loadLogs() {
+  const r = await api('GET', '/admin/logs')
+  if (!r.success) return
+  const tbody = document.getElementById('logs-tbody')
+  if (!r.logs.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Sem registros</td></tr>'; return }
+  const actionColor = { activated:'var(--green)', validated:'var(--blue)', activate_failed:'var(--red)', validate_failed:'var(--yellow)' }
+  tbody.innerHTML = r.logs.map(l => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px;font-family:monospace">${l.created_at?.slice(0,19) || '—'}</td>
+      <td><span class="key-text" style="font-size:12px">${l.key || '—'}</span></td>
+      <td style="color:${actionColor[l.action]||'var(--muted)'};font-size:12px;font-family:monospace">${l.action}</td>
+      <td style="color:var(--dim);font-size:11px;font-family:monospace">${l.ip || '—'}</td>
+      <td style="color:var(--muted);font-size:12px">${l.result}</td>
+    </tr>`).join('')
+}
+
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(() => toast('Chave copiada! ' + key, 'g'))
+}
+</script>
+</body>
+</html>
